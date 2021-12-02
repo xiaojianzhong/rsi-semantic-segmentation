@@ -1,0 +1,14 @@
+# Mac OS finder related files
+.DS_Store
+
+# PyCharm configuration files
+.idea/
+
+# VSCode configuration files
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Experiment logs and checkpoints
+runs/
