@@ -10,6 +10,8 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 
 ## <a name="supported-datasets"></a> Supported Datasets
 
+- [x] [Massachusetts Building](datas/massachusetts_building.py)
+
 ## <a name="supported-models"></a> Supported Models
 
 ## <a name="license"></a> License

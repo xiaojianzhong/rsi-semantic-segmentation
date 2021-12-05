@@ -10,6 +10,8 @@
 
 ## <a name="supported-datasets"></a> 支持的数据集
 
+- [x] [Massachusetts Building](datas/massachusetts_building.py)
+
 ## <a name="supported-models"></a> 支持的模型
 
 ## <a name="license"></a> 许可证
