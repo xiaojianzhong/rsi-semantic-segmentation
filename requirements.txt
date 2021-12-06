@@ -1,0 +1,9 @@
+numpy
+pandas
+scikit-image
+tensorboardX
+timm
+torch
+torchvision
+tqdm
+yacs

@@ -4,9 +4,28 @@
 
 ## 目录
 
+- [环境要求](#prerequisites)
 - [支持的数据集](#supported-datasets)
 - [支持的模型](#supported-models)
 - [许可证](#license)
+
+## <a name="prerequisites"></a> 环境要求
+
+- [NumPy](https://numpy.org/) 用于 CPU 上的多维数据表示
+- [Pandas](https://pandas.pydata.org/) 用于解析 `.csv` 文件
+- [scikit-image](https://scikit-image.org/) 用于读、写、显示图像
+- [tensorboardX](https://github.com/lanpa/tensorboardX) 用于输出 TensorBoard 日志
+- [timm](https://github.com/rwightman/pytorch-image-models) 用于提供 PyTorch 上的计算机视觉骨干网络支持
+- [PyTorch](https://pytorch.org/) 用于神经网络表示与计算
+- [TorchVision](https://pytorch.org/vision/) 用于提供计算机视觉基础组件支持
+- [tqdm](https://github.com/tqdm/tqdm) 用于绘制进度条
+- [yacs](https://github.com/rbgirshick/yacs) 用于解析 `.yaml` 配置文件
+
+所有这些 PyThon 第三方包都可以简单地使用 `pip` 进行安装：
+
+```shell
+$ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm yacs
+```
 
 ## <a name="supported-datasets"></a> 支持的数据集
 
