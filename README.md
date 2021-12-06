@@ -9,6 +9,10 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 - [Configurations](#configurations)
 - [Supported Datasets](#supported-datasets)
 - [Supported Models](#supported-models)
+- [Usage](#usage)
+    - [Train](#train)
+    - [Test](#test)
+    - [Inference](#inference)
 - [License](#license)
 
 ## <a name="project-structure"></a> Project Structure
@@ -99,6 +103,56 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 ## <a name="supported-models"></a> Supported Models
 
 - [x] [DeepLabV3 (ArXiv'2017)](models/deeplabv3.py)
+
+## <a name="usage"></a> Usage
+
+### <a name="train"></a> Train
+
+```shell
+$ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                  --checkpoint ./best.pth \
+                  --device cuda:0 \
+                  --path ./runs/20211206-201700/ \
+                  --no-validate
+```
+
+- `config`: Configuration to be used, which must be specified.
+- `--checkpoint`: Checkpoint to be loaded. Default: train from scratch.
+- `--device`: Device for training, could be either CPU or GPU. Default: GPU #0.
+- `--path`: Directory to save experiment output files. Default: a directory named by current time.
+- `--no-validate`: Whether not to validate on the validation set during training. Default: do validation.
+
+### <a name="test"></a> Test
+
+```shell
+$ python test.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                 ./best.pth \
+                 --device cuda:0
+```
+
+- `config`: configuration to be used, which must be specified.
+- `checkpoint`: Checkpoint to be loaded, which must be specified.
+- `--device`: Device for testing, could be either CPU or GPU. Default: GPU #0.
+
+### <a name="inference"></a> Inference
+
+```shell
+$ python inference.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                      ./best.pth \
+                      ./22828930_15.tif \
+                      --output ./output.tif \
+                      --device cuda:0 \
+                      --no-show \
+                      --no-save
+```
+
+- `config`: configuration to be used, which must be specified.
+- `checkpoint`: Checkpoint to be loaded, which must be specified.
+- `input`: Input image, which must be specified.
+- `--output`: Output segmentation map. Default: output.tif
+- `--device`: Device for inferring, could be either CPU or GPU. Default: GPU #0.
+- `--no-show`: Whether not to show segmentation results. Default: do showing.
+- `--no-save`: Whether not to save segmentation results. Default: do saving.
 
 ## <a name="license"></a> License
 

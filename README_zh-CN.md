@@ -9,6 +9,10 @@
 - [配置](#configurations)
 - [支持的数据集](#supported-datasets)
 - [支持的模型](#supported-models)
+- [用法](#usage)
+    - [训练](#train)
+    - [测试](#test)
+    - [推理](#inference)
 - [许可证](#license)
 
 ## <a name="project-structure"></a> 项目结构
@@ -99,6 +103,56 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 ## <a name="supported-models"></a> 支持的模型
 
 - [x] [DeepLabV3 (ArXiv'2017)](models/deeplabv3.py)
+
+## <a name="usage"></a> 用法
+
+### <a name="train"></a> 训练
+
+```shell
+$ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                  --checkpoint ./best.pth \
+                  --device cuda:0 \
+                  --path ./runs/20211206-201700/ \
+                  --no-validate
+```
+
+- `config` 指定所使用的配置文件，不可省略
+- `--checkpoint` 指定要加载的保存点，默认从零开始进行训练
+- `--device` 指定训练时要使用的设备，可以是 CPU 或 GPU，默认为 0 卡
+- `--path` 指定实验日志文件要存放到的路径，默认为一个以当前时间为名称的路径
+- `--no-validate` 指定在训练过程中是否不在验证集上进行验证，默认进行验证
+
+### <a name="test"></a> 测试
+
+```shell
+$ python test.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                 ./best.pth \
+                 --device cuda:0
+```
+
+- `config` 指定所使用的配置文件，不可省略
+- `checkpoint` 指定要加载的保存点，不可省略
+- `--device` 指定测试时要使用的设备，可以是 CPU 或 GPU，默认为 0 卡
+
+### <a name="inference"></a> 推理
+
+```shell
+$ python inference.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+                      ./best.pth \
+                      ./22828930_15.tif \
+                      --output ./output.tif \
+                      --device cuda:0 \
+                      --no-show \
+                      --no-save
+```
+
+- `config` 指定所使用的配置文件，不可省略
+- `checkpoint` 指定要加载的保存点，不可省略
+- `input` 指定输入图像，不可省略
+- `--output`: 指定输出分割图的文件名，默认为 output.tif
+- `--device` 指定推理时要使用的设备，可以是 CPU 或 GPU，默认为 0 卡
+- `--no-show` 指定是否不显示分割图结果，默认显示
+- `--no-save` 指定是否不保存分割图结果，默认保存
 
 ## <a name="license"></a> 许可证
 
