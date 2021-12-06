@@ -32,10 +32,10 @@ def parse_args():
                         help='device for inferring')
     parser.add_argument('--no-show',
                         action='store_true',
-                        help='whether to show output segmentation map')
+                        help='whether not to show output segmentation map')
     parser.add_argument('--no-save',
                         action='store_true',
-                        help='whether to save output segmentation map')
+                        help='whether not to save output segmentation map')
     args = parser.parse_args()
     return args
 
