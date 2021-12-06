@@ -1,0 +1,93 @@
+import argparse
+import logging
+import os
+
+import numpy as np
+import torch
+from skimage import io
+
+from configs import CFG
+from datas import build_dataset, build_transform
+from models import build_model
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config',
+                        type=str,
+                        help='config file')
+    parser.add_argument('checkpoint',
+                        type=str,
+                        help='checkpoint file')
+    parser.add_argument('input',
+                        type=str,
+                        help='input image file')
+    parser.add_argument('--output',
+                        type=str,
+                        default='output.tif',
+                        help='output segmentation map file')
+    parser.add_argument('--device',
+                        type=str,
+                        default='cuda:0',
+                        help='device for inferring')
+    parser.add_argument('--no-show',
+                        action='store_true',
+                        help='whether to show output segmentation map')
+    parser.add_argument('--no-save',
+                        action='store_true',
+                        help='whether to save output segmentation map')
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    # merge arguments to config
+    args = parse_args()
+    CFG.merge_from_file(args.config)
+
+    # build transform
+    transform = build_transform()
+    # build dataset
+    test_dataset = build_dataset('test')
+    NUM_CLASSES = test_dataset.num_classes
+    # build model
+    model = build_model(NUM_CLASSES)
+    model.to(args.device)
+
+    # load checkpoint
+    if not os.path.isfile(args.checkpoint):
+        raise RuntimeError('checkpoint {} not found'.format(args.checkpoint))
+    checkpoint = torch.load(args.checkpoint)
+    model.load_state_dict(checkpoint['model']['state_dict'])
+    best_miou = checkpoint['metric']['mIoU']
+    logging.info('load checkpoint {} with mIoU={:.4f}'.format(args.checkpoint, best_miou))
+
+    # infer
+    model.eval()  # set model to evaluation mode
+
+    x = io.imread(args.input)  # read image
+    x, _ = transform(x, None)  # preprocess image
+    x = x.unsqueeze(0)  # sample to batch
+    x = x.to(args.device)
+
+    y = model(x)
+
+    if NUM_CLASSES > 2:
+        pred = y.data.cpu().numpy().argmax(axis=1)
+    else:
+        pred = (y.data.cpu().numpy() > 0.5).squeeze(1)
+    pred = pred.squeeze(axis=0)
+    pred = pred.astype(np.uint8)
+    for label in test_dataset.labels:
+        pred[pred == label] = test_dataset.label2pixel(label)
+
+    if not args.no_show:
+        io.imshow(pred)
+        io.show()
+
+    if not args.no_save:
+        io.imsave(args.output, pred)
+
+
+if __name__ == '__main__':
+    main()
