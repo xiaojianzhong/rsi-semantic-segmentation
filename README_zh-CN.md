@@ -96,6 +96,8 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 |:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
 | `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
 
+配置文件名格式：`{dataset}_{method}_{criterion}_{optimizer}_{scheduler}_{batch size}_{lr}_{epochs}.yaml`
+
 ## <a name="supported-datasets"></a> 支持的数据集
 
 - [x] [Massachusetts Building](datas/massachusetts_building.py)
