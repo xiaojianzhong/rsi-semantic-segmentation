@@ -4,11 +4,69 @@
 
 ## 目录
 
+- [项目结构](#project-structure)
 - [环境要求](#prerequisites)
 - [配置](#configurations)
 - [支持的数据集](#supported-datasets)
 - [支持的模型](#supported-models)
 - [许可证](#license)
+
+## <a name="project-structure"></a> 项目结构
+
+```
+rsi-semantic-segmentation
+  |---- configs
+  |       |---- __init__.py
+  |       |---- massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml
+  |
+  |---- criterions
+  |       |---- __init__.py
+  |       |---- bce.py
+  |       |---- ce.py
+  |       |---- dice.py
+  |
+  |---- datas
+  |       |---- __init__.py
+  |       |---- base.py
+  |       |---- massachusetts_building.py
+  |       |---- patch.py
+  |       |---- transform.py
+  |
+  |---- models
+  |       |---- decoders
+  |       |       |---- __init__.py
+  |       |       |---- deeplabv3.py
+  |       |
+  |       |---- encoders
+  |       |       |---- __init__.py
+  |       |       |---- resnet.py
+  |       |
+  |       |---- modules
+  |       |       |---- __init__.py
+  |       |       |---- aspp.py
+  |       |
+  |       |---- utils
+  |       |       |---- init.py
+  |       |
+  |       |---- __init__.py
+  |       |---- deeplabv3.py
+  |
+  |---- optimizers
+  |       |---- __init__.py
+  |
+  |---- schedulers
+  |       |---- __init__.py
+  |
+  |---- .gitignore
+  |---- inference.py
+  |---- LICENSE
+  |---- metric.py
+  |---- README.md
+  |---- README_zh-CN.md
+  |---- requirements.txt
+  |---- test.py
+  |---- train.py
+```
 
 ## <a name="prerequisites"></a> 环境要求
 
