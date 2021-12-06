@@ -5,6 +5,7 @@
 ## 目录
 
 - [环境要求](#prerequisites)
+- [配置](#configurations)
 - [支持的数据集](#supported-datasets)
 - [支持的模型](#supported-models)
 - [许可证](#license)
@@ -26,6 +27,12 @@
 ```shell
 $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm yacs
 ```
+
+## <a name="configurations"></a> 配置
+
+| dataset                  | method               | criterion      | optimizer | scheduler | batch size | LR    | epochs | config                                                                                                |
+|:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
+| `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
 
 ## <a name="supported-datasets"></a> 支持的数据集
 

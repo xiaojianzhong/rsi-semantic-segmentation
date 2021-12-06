@@ -5,6 +5,7 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Configurations](#configurations)
 - [Supported Datasets](#supported-datasets)
 - [Supported Models](#supported-models)
 - [License](#license)
@@ -26,6 +27,12 @@ All these Python third-party packages can be easily installed through `pip`:
 ```shell
 $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm yacs
 ```
+
+## <a name="configurations"></a> Configurations
+
+| dataset                  | method               | criterion      | optimizer | scheduler | batch size | LR    | epochs | config                                                                                                |
+|:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
+| `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
 
 ## <a name="supported-datasets"></a> Supported Datasets
 

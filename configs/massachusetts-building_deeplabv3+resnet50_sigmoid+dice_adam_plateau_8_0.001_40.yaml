@@ -1,0 +1,38 @@
+DATASET:
+    NAME: 'massachusetts-building'
+    ROOT: 'C:/Users/zxj/Downloads/massachusetts-buildings-dataset/'
+    MEANS:
+        - 0.3748
+        - 0.3807
+        - 0.3495
+    STDS:
+        - 0.2213
+        - 0.2144
+        - 0.2216
+    PATCH:
+        HEIGHT: 256
+        WIDTH: 256
+        STRIDE_Y: 64
+        STRIDE_X: 64
+
+DATALOADER:
+    BATCH_SIZE: 8
+    NUM_WORKERS: 8
+
+MODEL:
+    NAME: 'deeplabv3+resnet50'
+
+CRITERION:
+    NAME: 'sigmoid+dice'
+
+OPTIMIZER:
+    NAME: 'adam'
+    LR: 0.001
+
+SCHEDULER:
+    NAME: 'plateau'
+    MODE: 'min'
+    FACTOR: 0.1
+    PATIENCE: 2
+
+EPOCHS: 40
