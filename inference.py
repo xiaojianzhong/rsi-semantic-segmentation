@@ -41,9 +41,8 @@ def parse_args():
 
 
 def main():
-    # merge arguments to config
+    # parse command line arguments
     args = parse_args()
-    CFG.merge_from_file(args.config)
 
     # build transform
     transform = build_transform()
