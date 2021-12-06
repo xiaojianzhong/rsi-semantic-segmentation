@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 from skimage import io
 
@@ -25,7 +26,7 @@ class MassachusettsBuildingDataset(Dataset):
     def __getitem__(self, i):
         image_path, label_path = self.image_paths[i], self.label_paths[i]
 
-        image, label = io.imread(image_path), io.imread(label_path, as_gray=True)
+        image, label = io.imread(image_path), io.imread(label_path, as_gray=True).astype(np.uint8)
         for pixel in self.pixels:
             label[label == pixel] = self.pixel2label(pixel)
 
