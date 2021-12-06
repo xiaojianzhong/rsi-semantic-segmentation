@@ -7,6 +7,7 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Configurations](#configurations)
+  - [Configuration Name Format](#configuration-name-format)
 - [Supported Datasets](#supported-datasets)
 - [Supported Models](#supported-models)
 - [Usage](#usage)
@@ -96,7 +97,20 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 |:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
 | `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
 
-configuration file name format: `{dataset}_{method}_{criterion}_{optimizer}_{scheduler}_{batch size}_{lr}_{epochs}.yaml`
+### <a name="configuration-name-format"></a> Configuration Name Format
+
+```
+{dataset}_{method}_{criterion}_{optimizer}_{scheduler}_{batch size}_{lr}_{epochs}.yaml
+```
+
+- `{dataset}`: dataset name like `massachusetts-building`, `massachusetts-road`, etc.
+- `{method}`: method name like `deeplabv3+resnet50`, `deeplabv3+resnet101`, etc.
+- `{criterion}`: criterion name like `ce`, `bce`, etc.
+- `{optimizer}`: optimizer name like `sgd`, `adam`, etc.
+- `{scheduler}`: scheduler name like `poly`, `plateau`, etc.
+- `{batch size}`: batch size during training, e.g. `4`, `8`.
+- `{lr}`: basic learning rate for training, e.g. `0.01`, `0.001`.
+- `{epochs}`: epochs for training, e.g. `20`, `40`.
 
 ## <a name="supported-datasets"></a> Supported Datasets
 

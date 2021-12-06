@@ -7,6 +7,7 @@
 - [项目结构](#project-structure)
 - [环境要求](#prerequisites)
 - [配置](#configurations)
+  - [配置文件名格式](#configuration-name-format)
 - [支持的数据集](#supported-datasets)
 - [支持的模型](#supported-models)
 - [用法](#usage)
@@ -96,7 +97,20 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 |:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
 | `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
 
-配置文件名格式：`{dataset}_{method}_{criterion}_{optimizer}_{scheduler}_{batch size}_{lr}_{epochs}.yaml`
+### <a name="configuration-name-format"></a> 配置文件名格式
+
+```
+{dataset}_{method}_{criterion}_{optimizer}_{scheduler}_{batch size}_{lr}_{epochs}.yaml
+```
+
+- `{dataset}`: 数据集名称，如 `massachusetts-building`，`massachusetts-road`
+- `{method}`: 方法名称，如 `deeplabv3+resnet50`，`deeplabv3+resnet101`
+- `{criterion}`: 损失函数名称，如 `ce`，`bce`
+- `{optimizer}`: 优化器名称，如 `sgd`，`adam`
+- `{scheduler}`: 学习率调整器，如 `poly`，`plateau`
+- `{batch size}`: 训练过程中的批次大小，如 `4`，`8`
+- `{lr}`: 用于训练的基础学习率，如 `0.01`，`0.001`
+- `{epochs}`: 训练轮数，如 `20`，`40`
 
 ## <a name="supported-datasets"></a> 支持的数据集
 
