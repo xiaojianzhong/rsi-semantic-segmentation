@@ -14,6 +14,8 @@
 
 ## <a name="supported-models"></a> 支持的模型
 
+- [x] [DeepLabV3 (ArXiv'2017)](models/deeplabv3.py)
+
 ## <a name="license"></a> 许可证
 
 该项目基于 [MIT 许可证](LICENSE)发行。
