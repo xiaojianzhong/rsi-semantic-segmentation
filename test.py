@@ -31,6 +31,9 @@ def main():
     # parse command line arguments
     args = parse_args()
 
+    # merge config with config file
+    CFG.merge_from_file(args.config)
+
     # log to stdout only
     logging.basicConfig(
         level=logging.INFO,

@@ -47,6 +47,9 @@ def main():
     if not os.path.exists(args.path):
         os.makedirs(args.path, exist_ok=True)
 
+    # merge config with config file
+    CFG.merge_from_file(args.config)
+
     # dump config
     with open(os.path.join(args.path, 'config.yaml'), 'w') as f:
         f.write(CFG.dump())
