@@ -5,7 +5,7 @@ class Metric:
     def __init__(self, num_classes, ignore_indexes=[]):
         self.num_classes = num_classes
         self.ignore_indexes = ignore_indexes
-        self.matrix = np.zeros((self.num_classes, self.num_classes), dtype=np.int)
+        self.matrix = np.zeros((self.num_classes, self.num_classes))
 
     def reset(self):
         self.matrix.fill(0)
