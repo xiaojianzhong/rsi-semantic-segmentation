@@ -114,6 +114,7 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 
 ## <a name="supported-datasets"></a> Supported Datasets
 
+- [x] [GF2 Building](datas/gf2_building.py)
 - [x] [Massachusetts Building](datas/massachusetts_building.py)
 
 ## <a name="supported-models"></a> Supported Models
