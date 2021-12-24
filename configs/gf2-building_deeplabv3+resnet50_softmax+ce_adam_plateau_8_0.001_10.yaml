@@ -1,0 +1,40 @@
+DATASET:
+    NAME: 'gf2-building'
+    ROOT: 'C:/Users/zxj/Downloads/GF2/'
+    MEANS: # TODO: measure mean
+        - 0.
+        - 0.
+        - 0.
+        - 0.
+    STDS: # TODO: measure std
+        - 1.
+        - 1.
+        - 1.
+        - 1.
+    PATCH:
+        HEIGHT: 256
+        WIDTH: 256
+        STRIDE_Y: 64
+        STRIDE_X: 64
+
+DATALOADER:
+    BATCH_SIZE: 8
+    NUM_WORKERS: 8
+
+MODEL:
+    NAME: 'deeplabv3+resnet50'
+
+CRITERION:
+    NAME: 'softmax+ce'
+
+OPTIMIZER:
+    NAME: 'adam'
+    LR: 0.001
+
+SCHEDULER:
+    NAME: 'plateau'
+    MODE: 'min'
+    FACTOR: 0.1
+    PATIENCE: 2
+
+EPOCHS: 10
