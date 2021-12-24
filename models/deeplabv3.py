@@ -7,9 +7,9 @@ from models.utils.init import initialize_weights
 
 
 class DeepLabV3ResNet(nn.Module):
-    def __init__(self, depth, num_classes):
+    def __init__(self, depth, in_channels, num_classes):
         super(DeepLabV3ResNet, self).__init__()
-        self.encoder = ResNet(depth)
+        self.encoder = ResNet(depth, in_channels)
         depth2channels = {
             18: 512,
             34: 512,
@@ -29,20 +29,20 @@ class DeepLabV3ResNet(nn.Module):
 
 
 class DeepLabV3ResNet18(DeepLabV3ResNet):
-    def __init__(self, num_classes):
-        super(DeepLabV3ResNet18, self).__init__(18, num_classes)
+    def __init__(self, num_channels, num_classes):
+        super(DeepLabV3ResNet18, self).__init__(18, num_channels, num_classes)
 
 
 class DeepLabV3ResNet34(DeepLabV3ResNet):
-    def __init__(self, num_classes):
-        super(DeepLabV3ResNet34, self).__init__(34, num_classes)
+    def __init__(self, num_channels, num_classes):
+        super(DeepLabV3ResNet34, self).__init__(34, num_channels, num_classes)
 
 
 class DeepLabV3ResNet50(DeepLabV3ResNet):
-    def __init__(self, num_classes):
-        super(DeepLabV3ResNet50, self).__init__(50, num_classes)
+    def __init__(self, num_channels, num_classes):
+        super(DeepLabV3ResNet50, self).__init__(50, num_channels, num_classes)
 
 
 class DeepLabV3ResNet101(nn.Module):
-    def __init__(self, num_classes):
-        super(DeepLabV3ResNet101, self).__init__(101, num_classes)
+    def __init__(self, num_channels, num_classes):
+        super(DeepLabV3ResNet101, self).__init__(101, num_channels, num_classes)

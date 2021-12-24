@@ -22,6 +22,10 @@ class Dataset(utils.data.Dataset):
         return len(self.labels)
 
     @property
+    def num_channels(self):
+        raise NotImplementedError('num_channels() not implemented')
+
+    @property
     def labels(self):
         # e.g. [0, 1, 2]
         raise NotImplementedError('labels() not implemented')

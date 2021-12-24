@@ -48,6 +48,10 @@ class PatchedDataset(Dataset):
         return image, label
 
     @property
+    def num_channels(self):
+        return self.dataset.num_channels
+
+    @property
     def labels(self):
         return self.dataset.labels
 

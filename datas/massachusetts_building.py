@@ -36,6 +36,10 @@ class MassachusettsBuildingDataset(Dataset):
         return image, label
 
     @property
+    def num_channels(self):
+        return 3
+
+    @property
     def labels(self):
         return [0, 1]
 

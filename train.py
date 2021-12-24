@@ -70,12 +70,13 @@ def main():
     train_dataset = build_dataset('train')
     val_dataset = build_dataset('val')
     assert train_dataset.num_classes == val_dataset.num_classes
+    NUM_CHANNELS = train_dataset.num_channels
     NUM_CLASSES = train_dataset.num_classes
     # build data loader
     train_dataloader = build_dataloader(train_dataset, 'train')
     val_dataloader = build_dataloader(val_dataset, 'val')
     # build model
-    model = build_model(NUM_CLASSES)
+    model = build_model(NUM_CHANNELS, NUM_CLASSES)
     model.to(args.device)
     # build criterion
     criterion = build_criterion()
