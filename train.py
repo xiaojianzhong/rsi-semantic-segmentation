@@ -201,6 +201,7 @@ def main():
         }
         torch.save(checkpoint, os.path.join(args.path, 'last.pth'))
         if miou > best_miou:
+            best_miou = miou
             torch.save(checkpoint, os.path.join(args.path, 'best.pth'))
 
 
