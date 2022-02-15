@@ -31,7 +31,9 @@ class MassachusettsBuildingDataset(Dataset):
             label[label == pixel] = self.pixel2label(pixel)
 
         if self.transform is not None:
-            image, label = self.transform(image, label)
+            transformed = self.transform(image=image, mask=label)
+            image = transformed['image']
+            label = transformed['mask']
 
         return image, label
 

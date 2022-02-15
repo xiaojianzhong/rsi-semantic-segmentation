@@ -32,7 +32,9 @@ class GF2BuildingDataset(Dataset):
         label = np.load(label_path).argmax(axis=0)
 
         if self.transform is not None:
-            image, label = self.transform(image, label)
+            transformed = self.transform(image=image, mask=label)
+            image = transformed['image']
+            label = transformed['mask']
 
         return image, label
 

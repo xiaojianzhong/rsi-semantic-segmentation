@@ -1,18 +1,27 @@
+import albumentations as A
+import albumentations.pytorch
 import torch.distributed as dist
 from torch.utils.data import DataLoader
 
-import datas.transforms as transforms
 from configs import CFG
 from .gf2_building import GF2BuildingDataset
 from .massachusetts_building import MassachusettsBuildingDataset
 from .patch import PatchedDataset
 
 
-def build_transform():
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=CFG.DATASET.MEANS, std=CFG.DATASET.STDS),
-    ])
+def build_transform(split):
+    transforms = []
+    if split == 'train':
+        pass
+    elif split == 'val' or split == 'test':
+        # TODO: report bug
+        transforms.append(A.PadIfNeeded(min_height=None,
+                                        min_width=None,
+                                        pad_height_divisor=32,
+                                        pad_width_divisor=32))
+    transforms.append(A.Normalize(mean=CFG.DATASET.MEANS, std=CFG.DATASET.STDS))
+    transforms.append(A.pytorch.ToTensorV2())
+    transform = A.Compose(transforms)
     return transform
 
 
@@ -21,11 +30,11 @@ def build_dataset(split):
     if CFG.DATASET.NAME == 'gf2-building':
         dataset = GF2BuildingDataset(CFG.DATASET.ROOT,
                                      split,
-                                     transform=build_transform())
+                                     transform=build_transform(split))
     elif CFG.DATASET.NAME == 'massachusetts-building':
         dataset = MassachusettsBuildingDataset(CFG.DATASET.ROOT,
                                                split,
-                                               transform=build_transform())
+                                               transform=build_transform(split))
     else:
         raise NotImplementedError('invalid dataset: {}'.format(CFG.DATASET.NAME))
     dataset = PatchedDataset(dataset,
