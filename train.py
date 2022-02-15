@@ -1,10 +1,16 @@
 import argparse
 import logging
 import os
+import random
 from datetime import datetime
 
+import numpy as np
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 from tensorboardX import SummaryWriter
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
 from configs import CFG
@@ -24,10 +30,6 @@ def parse_args():
     parser.add_argument('--checkpoint',
                         type=str,
                         help='checkpoint file')
-    parser.add_argument('--device',
-                        type=str,
-                        default='cuda:0',
-                        help='device for training')
     parser.add_argument('--path',
                         type=str,
                         default=os.path.join('runs', datetime.now().strftime('%Y%m%d-%H%M%S')),
@@ -35,8 +37,229 @@ def parse_args():
     parser.add_argument('--no-validate',
                         action='store_true',
                         help='whether not to validate in the training process')
+    parser.add_argument('-n',
+                        '--nodes',
+                        type=int,
+                        default=1,
+                        help='number of nodes / machines')
+    parser.add_argument('-g',
+                        '--gpus',
+                        type=int,
+                        default=1,
+                        help='number of GPUs per node / machine')
+    parser.add_argument('-r',
+                        '--rank-node',
+                        type=int,
+                        default=0,
+                        help='ranking of the current node / machine')
+    parser.add_argument('--backend',
+                        type=str,
+                        default='nccl',
+                        help='backend for PyTorch DDP')
+    parser.add_argument('--master-ip',
+                        type=str,
+                        default='localhost',
+                        help='network IP of the master node / machine')
+    parser.add_argument('--master-port',
+                        type=str,
+                        default='8888',
+                        help='network port of the master process on the master node / machine')
+    parser.add_argument('--seed',
+                        type=int,
+                        default=42,
+                        help='random seed')
     args = parser.parse_args()
+    args.world_size = args.nodes * args.gpus
     return args
+
+
+def worker(rank_gpu, args):
+    rank_process = args.gpus * args.rank_node + rank_gpu
+    # initialize process group
+    dist.init_process_group(backend=args.backend,
+                            init_method=f'tcp://{args.master_ip}:{args.master_port}',
+                            world_size=args.world_size,
+                            rank=rank_process)
+    logging.info('train on {} processes'.format(dist.get_world_size()))
+
+    # use device cuda:n in the process #n
+    torch.cuda.set_device(rank_gpu)
+    device = torch.device('cuda', rank_gpu)
+
+    # set random seed
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+
+    # initialize TensorBoard summary writer on the master process
+    if dist.get_rank() == 0:
+        writer = SummaryWriter(logdir=args.path)
+
+    # build dataset
+    train_dataset = build_dataset('train')
+    val_dataset = build_dataset('val')
+    assert train_dataset.num_classes == val_dataset.num_classes
+    NUM_CHANNELS = train_dataset.num_channels
+    NUM_CLASSES = train_dataset.num_classes
+    # build data sampler
+    train_sampler = DistributedSampler(train_dataset, shuffle=True)
+    # build data loader
+    train_dataloader = build_dataloader(train_dataset, train_sampler, 'train')
+    val_dataloader = build_dataloader(val_dataset, None, 'val')
+    # build model
+    model = build_model(NUM_CHANNELS, NUM_CLASSES)
+    model.to(device)
+    # build criterion
+    criterion = build_criterion()
+    # build metric
+    metric = Metric(NUM_CLASSES)
+    # build optimizer
+    optimizer = build_optimizer(model)
+    # build scheduler
+    scheduler = build_scheduler(optimizer)
+
+    # DDP
+    model = DistributedDataParallel(model)
+
+    epoch = 0
+    iteration = 0
+    best_miou = 0.
+
+    # load checkpoint if specified
+    if args.checkpoint is not None:
+        if not os.path.isfile(args.checkpoint):
+            raise RuntimeError('checkpoint {} not found'.format(args.checkpoint))
+        checkpoint = torch.load(args.checkpoint)
+        model.module.load_state_dict(checkpoint['model']['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer']['state_dict'])
+        epoch = checkpoint['optimizer']['epoch']
+        iteration = checkpoint['optimizer']['iteration']
+        best_miou = checkpoint['metric']['mIoU']
+        logging.info('load checkpoint {} with mIoU={:.4f}'.format(args.checkpoint, best_miou))
+
+    # train - validation loop
+    while True:
+        epoch += 1
+        if epoch > CFG.EPOCHS:
+            if dist.get_rank() == 0:
+                writer.close()
+            return
+
+        train_dataloader.sampler.set_epoch(epoch)
+
+        if dist.get_rank() == 0:
+            lr = optimizer.param_groups[0]['lr']
+            writer.add_scalar('lr-epoch', lr, epoch)
+
+        # train
+        model.train()  # set model to training mode
+        metric.reset()  # reset metric
+        train_bar = tqdm(train_dataloader, desc='training', ascii=True)
+        train_loss = 0.
+        for x, label in train_bar:
+            iteration += 1
+
+            x, label = x.to(device), label.to(device)
+            y = model(x)
+
+            loss = criterion(y, label)
+            train_loss += loss.item()
+            if dist.get_rank() == 0:
+                writer.add_scalar('train/loss-iteration', loss.item(), iteration)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            pred = y.argmax(axis=1)
+            metric.add(pred.data.cpu().numpy(), label.data.cpu().numpy())
+
+            train_bar.set_postfix({
+                'epoch': epoch,
+                'loss': f'{loss.item():.4f}',
+                'PA': f'{metric.PA():.4f}',
+                'mPA': f'{metric.mPA():.4f}',
+                'mIoU': f'{metric.mIoU():.4f}',
+                'P': ','.join([f'{p:.4f}' for p in metric.Ps()]),
+                'R': ','.join([f'{r:.4f}' for r in metric.Rs()]),
+                'IoU': ','.join([f'{iou:.4f}' for iou in metric.IoUs()]),
+            })
+        train_loss /= len(train_dataloader)
+        if dist.get_rank() == 0:
+            writer.add_scalar('train/loss-epoch', train_loss, epoch)
+
+        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
+        if dist.get_rank() == 0:
+            writer.add_scalar('train/PA-epoch', pa, epoch)
+            writer.add_scalar('train/mPA-epoch', mpa, epoch)
+            writer.add_scalar('train/mIoU-epoch', miou, epoch)
+
+        # validate
+        if args.no_validate:
+            continue
+        model.eval()  # set model to evaluation mode
+        metric.reset()  # reset metric
+        val_bar = tqdm(val_dataloader, desc='validating', ascii=True)
+        val_loss = 0.
+        with torch.no_grad():  # disable gradient back-propagation
+            for x, label in val_bar:
+                x, label = x.to(device), label.to(device)
+                y = model(x)
+
+                loss = criterion(y, label)
+                val_loss += loss.item()
+
+                pred = y.argmax(axis=1)
+                metric.add(pred.data.cpu().numpy(), label.data.cpu().numpy())
+
+                val_bar.set_postfix({
+                    'epoch': epoch,
+                    'loss': f'{loss.item():.4f}',
+                    'PA': f'{metric.PA():.4f}',
+                    'mPA': f'{metric.mPA():.4f}',
+                    'mIoU': f'{metric.mIoU():.4f}',
+                    'P': ','.join([f'{p:.4f}' for p in metric.Ps()]),
+                    'R': ','.join([f'{r:.4f}' for r in metric.Rs()]),
+                    'IoU': ','.join([f'{iou:.4f}' for iou in metric.IoUs()]),
+                })
+        val_loss /= len(val_dataloader)
+        if dist.get_rank() == 0:
+            writer.add_scalar('val/loss-epoch', val_loss, epoch)
+
+        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
+        if dist.get_rank() == 0:
+            writer.add_scalar('val/PA-epoch', pa, epoch)
+            writer.add_scalar('val/mPA-epoch', mpa, epoch)
+            writer.add_scalar('val/mIoU-epoch', miou, epoch)
+
+        # adjust learning rate if specified
+        if scheduler is not None:
+            scheduler.step(val_loss)  # TODO: remove val_loss
+
+        # save checkpoint on the master process
+        if dist.get_rank() == 0:
+            checkpoint = {
+                'model': {
+                    'state_dict': model.state_dict(),
+                },
+                'optimizer': {
+                    'state_dict': optimizer.state_dict(),
+                    'epoch': epoch,
+                    'iteration': iteration,
+                },
+                'metric': {
+                    'PA': pa,
+                    'PAs': pas,
+                    'mPA': mpa,
+                    'IoUs': ious,
+                    'mIoU': miou,
+                },
+            }
+            torch.save(checkpoint, os.path.join(args.path, 'last.pth'))
+            if miou > best_miou:
+                best_miou = miou
+                torch.save(checkpoint, os.path.join(args.path, 'best.pth'))
 
 
 def main():
@@ -54,155 +277,15 @@ def main():
     with open(os.path.join(args.path, 'config.yaml'), 'w') as f:
         f.write(CFG.dump())
 
-    # log to file and stdout
+    # log to stdout only
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s: %(message)s',
         handlers=[
-            logging.FileHandler(os.path.join(args.path, 'train.log')),
             logging.StreamHandler(),
         ])
 
-    # initialize TensorBoard summary writer
-    writer = SummaryWriter(logdir=args.path)
-
-    # build dataset
-    train_dataset = build_dataset('train')
-    val_dataset = build_dataset('val')
-    assert train_dataset.num_classes == val_dataset.num_classes
-    NUM_CHANNELS = train_dataset.num_channels
-    NUM_CLASSES = train_dataset.num_classes
-    # build data loader
-    train_dataloader = build_dataloader(train_dataset, 'train')
-    val_dataloader = build_dataloader(val_dataset, 'val')
-    # build model
-    model = build_model(NUM_CHANNELS, NUM_CLASSES)
-    model.to(args.device)
-    # build criterion
-    criterion = build_criterion()
-    # build metric
-    metric = Metric(NUM_CLASSES)
-    # build optimizer
-    optimizer = build_optimizer(model)
-    # build scheduler
-    scheduler = build_scheduler(optimizer)
-
-    start_epoch = 0
-    best_miou = 0.
-
-    # load checkpoint if specified
-    if args.checkpoint is not None:
-        if not os.path.isfile(args.checkpoint):
-            raise RuntimeError('checkpoint {} not found'.format(args.checkpoint))
-        checkpoint = torch.load(args.checkpoint)
-        model.load_state_dict(checkpoint['model']['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer']['state_dict'])
-        start_epoch = checkpoint['optimizer']['epoch']
-        best_miou = checkpoint['metric']['mIoU']
-        logging.info('load checkpoint {} with mIoU={:.4f}'.format(args.checkpoint, best_miou))
-
-    # train - validation loop
-    for epoch in range(start_epoch, CFG.EPOCHS):
-        lr = optimizer.param_groups[0]['lr']
-        writer.add_scalar('lr-epoch', lr, epoch)
-
-        # train
-        model.train()  # set model to training mode
-        metric.reset()  # reset metric
-        train_bar = tqdm(train_dataloader, desc='training', ascii=True)
-        train_loss = 0.
-        for batch, (x, label) in enumerate(train_bar):
-            iteration = epoch * len(train_dataloader) + batch
-
-            x, label = x.to(args.device), label.to(args.device)
-            y = model(x)
-
-            loss = criterion(y, label)
-            train_loss += loss.item()
-            train_bar.set_description('train loss: {:.4f}'.format(loss.item()))
-            writer.add_scalar('train/loss-iteration', loss.item(), iteration+1)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if NUM_CLASSES > 2:
-                pred = y.data.cpu().numpy().argmax(axis=1)
-            else:
-                pred = (y.data.cpu().numpy() > 0.5).squeeze(1)
-            label = label.data.cpu().numpy()
-            metric.add(pred, label)
-        train_loss /= len(train_dataloader)
-        writer.add_scalar('train/loss-epoch', train_loss, epoch+1)
-
-        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
-        writer.add_scalar('train/PA-epoch', pa, epoch+1)
-        writer.add_scalar('train/mPA-epoch', mpa, epoch+1)
-        writer.add_scalar('train/mIoU-epoch', miou, epoch+1)
-
-        logging.info('train epoch={} | loss={:.4f} PA={:.4f} mPA={:.4f} mIoU={:.4f}'.format(epoch+1, train_loss, pa, mpa, miou))
-        for c in range(NUM_CLASSES):
-            logging.info('train epoch={} | class=#{} PA={:.4f} IoU={:.4f}'.format(epoch+1, c, pas[c], ious[c]))
-
-        # validate
-        if args.no_validate:
-            continue
-        model.eval()  # set model to evaluation mode
-        metric.reset()  # reset metric
-        val_bar = tqdm(val_dataloader, desc='validating', ascii=True)
-        val_loss = 0.
-        with torch.no_grad():  # disable gradient back-propagation
-            for batch, (x, label) in enumerate(val_bar):
-                x, label = x.to(args.device), label.to(args.device)
-                y = model(x)
-
-                loss = criterion(y, label)
-                val_loss += loss.item()
-                val_bar.set_description('val loss: {:.4f}'.format(loss.item()))
-
-                if NUM_CLASSES > 2:
-                    pred = y.data.cpu().numpy().argmax(axis=1)
-                else:
-                    pred = (y.data.cpu().numpy() > 0.5).squeeze(1)
-                label = label.data.cpu().numpy()
-                metric.add(pred, label)
-        val_loss /= len(val_dataloader)
-        writer.add_scalar('val/loss-epoch', val_loss, epoch+1)
-
-        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
-        writer.add_scalar('val/PA-epoch', pa, epoch+1)
-        writer.add_scalar('val/mPA-epoch', mpa, epoch+1)
-        writer.add_scalar('val/mIoU-epoch', miou, epoch+1)
-
-        logging.info('val epoch={} | loss={:.4f} PA={:.4f} mPA={:.4f} mIoU={:.4f}'.format(epoch+1, val_loss, pa, mpa, miou))
-        for c in range(NUM_CLASSES):
-            logging.info('val epoch={} | class=#{} PA={:.4f} IoU={:.4f}'.format(epoch+1, c, pas[c], ious[c]))
-
-        # adjust learning rate if specified
-        if scheduler is not None:
-            scheduler.step(val_loss)  # TODO: remove val_loss
-
-        # save checkpoint
-        checkpoint = {
-            'model': {
-                'state_dict': model.state_dict(),
-            },
-            'optimizer': {
-                'state_dict': optimizer.state_dict(),
-                'epoch': epoch,
-            },
-            'metric': {
-                'PA': pa,
-                'PAs': pas,
-                'mPA': mpa,
-                'IoUs': ious,
-                'mIoU': miou,
-            },
-        }
-        torch.save(checkpoint, os.path.join(args.path, 'last.pth'))
-        if miou > best_miou:
-            best_miou = miou
-            torch.save(checkpoint, os.path.join(args.path, 'best.pth'))
+    mp.spawn(worker, args=(args,), nprocs=args.gpus)
 
 
 if __name__ == '__main__':

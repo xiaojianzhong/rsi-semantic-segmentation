@@ -1,3 +1,4 @@
+import torch.distributed as dist
 from torch.utils.data import DataLoader
 
 import datas.transforms as transforms
@@ -33,23 +34,23 @@ def build_dataset(split):
     return dataset
 
 
-def build_dataloader(dataset, split):
+def build_dataloader(dataset, sampler, split):
     assert split in ['train', 'val', 'test']
     if split == 'train':
         return DataLoader(dataset,
-                          batch_size=CFG.DATALOADER.BATCH_SIZE,
-                          shuffle=True,
+                          sampler=sampler,
+                          batch_size=CFG.DATALOADER.BATCH_SIZE // dist.get_world_size(),
                           num_workers=CFG.DATALOADER.NUM_WORKERS,
                           pin_memory=True)
     elif split == 'val':
         return DataLoader(dataset,
+                          sampler=sampler,
                           batch_size=1,
-                          shuffle=False,
                           num_workers=CFG.DATALOADER.NUM_WORKERS,
                           pin_memory=True)
     elif split == 'test':
         return DataLoader(dataset,
+                          sampler=sampler,
                           batch_size=1,
-                          shuffle=False,
                           num_workers=CFG.DATALOADER.NUM_WORKERS,
                           pin_memory=True)
