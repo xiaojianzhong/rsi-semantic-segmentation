@@ -69,7 +69,7 @@ def main():
     model.eval()  # set model to evaluation mode
 
     x = io.imread(args.input)  # read image
-    x, _ = transform(x, None)  # preprocess image
+    x = transform(image=x)['image']  # preprocess image
     x = x.unsqueeze(0)  # sample to batch
     x = x.to(args.device)
 
