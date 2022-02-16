@@ -22,6 +22,7 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 rsi-semantic-segmentation
   |---- configs
   |       |---- __init__.py
+  |       |---- gf2-building_deeplabv3-resnet50_ce_adam_plateau_8_0.001_40.yaml
   |       |---- massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml
   |
   |---- criterions
@@ -33,8 +34,8 @@ rsi-semantic-segmentation
   |---- datas
   |       |---- __init__.py
   |       |---- base.py
+  |       |---- gf2_building.py
   |       |---- massachusetts_building.py
-  |       |---- patch.py
   |       |---- transform.py
   |
   |---- models
@@ -61,6 +62,11 @@ rsi-semantic-segmentation
   |
   |---- schedulers
   |       |---- __init__.py
+  |
+  |---- tools
+  |       |---- datasets
+  |               |---- massachusetts_building
+  |                       |---- patch.py
   |
   |---- .gitignore
   |---- inference.py
@@ -127,7 +133,7 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 ### <a name="train"></a> Train
 
 ```shell
-$ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+$ python train.py configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml \
                   --checkpoint ./best.pth \
                   --path ./runs/20211206-201700/ \
                   --no-validate \
@@ -157,7 +163,7 @@ $ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice
 ### <a name="test"></a> Test
 
 ```shell
-$ python test.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+$ python test.py configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml \
                  ./best.pth \
                  --device cuda:0
 ```
@@ -169,7 +175,7 @@ $ python test.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_
 ### <a name="inference"></a> Inference
 
 ```shell
-$ python inference.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+$ python inference.py configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml \
                       ./best.pth \
                       ./22828930_15.tif \
                       --output ./output.tif \
