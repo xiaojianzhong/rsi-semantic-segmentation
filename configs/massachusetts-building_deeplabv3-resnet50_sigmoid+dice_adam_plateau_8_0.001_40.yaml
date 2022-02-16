@@ -15,7 +15,9 @@ DATALOADER:
     NUM_WORKERS: 8
 
 MODEL:
-    NAME: 'deeplabv3+resnet50'
+    NAME: 'deeplabv3'
+    BACKBONE:
+        NAME: 'resnet50'
 
 CRITERION:
     NAME: 'sigmoid+dice'
