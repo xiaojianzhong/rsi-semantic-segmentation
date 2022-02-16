@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 from configs import CFG
 from .gf2_building import GF2BuildingDataset
 from .massachusetts_building import MassachusettsBuildingDataset
-from .patch import PatchedDataset
 
 
 def build_transform(split):
@@ -37,9 +36,6 @@ def build_dataset(split):
                                                transform=build_transform(split))
     else:
         raise NotImplementedError('invalid dataset: {}'.format(CFG.DATASET.NAME))
-    dataset = PatchedDataset(dataset,
-                             (CFG.DATASET.PATCH.HEIGHT, CFG.DATASET.PATCH.WIDTH),
-                             (CFG.DATASET.PATCH.STRIDE_Y, CFG.DATASET.PATCH.STRIDE_X))
     return dataset
 
 

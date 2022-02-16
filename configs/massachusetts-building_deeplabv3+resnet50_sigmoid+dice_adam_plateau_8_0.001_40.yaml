@@ -9,11 +9,6 @@ DATASET:
         - 0.2213
         - 0.2144
         - 0.2216
-    PATCH:
-        HEIGHT: 256
-        WIDTH: 256
-        STRIDE_Y: 64
-        STRIDE_X: 64
 
 DATALOADER:
     BATCH_SIZE: 8
