@@ -22,14 +22,24 @@ class Metric:
         acc = np.diag(self.matrix).sum() / self.matrix.sum()
         return acc
 
-    def PAs(self):
-        accs = np.diag(self.matrix) / self.matrix.sum(axis=1)
-        return accs
-
     def mPA(self):
-        accs = self.PAs()
-        acc = accs.mean()
-        return acc
+        ps = self.Ps()
+        mpa = ps.mean()
+        return mpa
+
+    def Ps(self):
+        ps = np.diag(self.matrix) / self.matrix.sum(axis=1)
+        return ps
+
+    def Rs(self):
+        rs = np.diag(self.matrix) / self.matrix.sum(axis=0)
+        return rs
+
+    def F1s(self):
+        ps = self.Ps()
+        rs = self.Ps()
+        f1s = 2 * ps * rs / (ps + rs)
+        return f1s
 
     def IoUs(self):
         intersection = np.diag(self.matrix)

@@ -199,7 +199,7 @@ def worker(rank_gpu, args):
         if dist.get_rank() == 0:
             writer.add_scalar('train/loss-epoch', train_loss, epoch)
 
-        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
+        pa, mpa, miou, ps, rs, ious = metric.PA(), metric.mPA(), metric.mIoU(), metric.Ps(), metric.Rs(), metric.IoUs()
         if dist.get_rank() == 0:
             writer.add_scalar('train/PA-epoch', pa, epoch)
             writer.add_scalar('train/mPA-epoch', mpa, epoch)
@@ -237,7 +237,7 @@ def worker(rank_gpu, args):
         if dist.get_rank() == 0:
             writer.add_scalar('val/loss-epoch', val_loss, epoch)
 
-        pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
+        pa, mpa, miou, ps, rs, ious = metric.PA(), metric.mPA(), metric.mIoU(), metric.Ps(), metric.Rs(), metric.IoUs()
         if dist.get_rank() == 0:
             writer.add_scalar('val/PA-epoch', pa, epoch)
             writer.add_scalar('val/mPA-epoch', mpa, epoch)
@@ -260,10 +260,11 @@ def worker(rank_gpu, args):
                 },
                 'metric': {
                     'PA': pa,
-                    'PAs': pas,
                     'mPA': mpa,
-                    'IoUs': ious,
                     'mIoU': miou,
+                    'Ps': ps,
+                    'Rs': rs,
+                    'IoUs': ious,
                 },
             }
             torch.save(checkpoint, os.path.join(args.path, 'last.pth'))
