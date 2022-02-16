@@ -8,8 +8,9 @@ import numpy as np
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
+from apex import amp
+from apex.parallel import DistributedDataParallel
 from tensorboardX import SummaryWriter
-from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
@@ -68,6 +69,10 @@ def parse_args():
                         type=int,
                         default=42,
                         help='random seed')
+    parser.add_argument('--opt-level',
+                        type=str,
+                        default='O0',
+                        help='optimization level for nvidia/apex')
     args = parser.parse_args()
     args.world_size = args.nodes * args.gpus
     return args
@@ -119,6 +124,9 @@ def worker(rank_gpu, args):
     # build scheduler
     scheduler = build_scheduler(optimizer)
 
+    # mixed precision
+    model, optimizer = amp.initialize(model, optimizer, opt_level=args.opt_level)
+
     # DDP
     model = DistributedDataParallel(model)
 
@@ -169,7 +177,8 @@ def worker(rank_gpu, args):
                 writer.add_scalar('train/loss-iteration', loss.item(), iteration)
 
             optimizer.zero_grad()
-            loss.backward()
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                scaled_loss.backward()
             optimizer.step()
 
             pred = y.argmax(axis=1)
