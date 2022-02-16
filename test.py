@@ -72,10 +72,15 @@ def main():
 
             pred = y.argmax(axis=1)
             metric.add(pred.data.cpu().numpy(), label.data.cpu().numpy())
-    pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
-    logging.info('test | PA={:.4f} mPA={:.4f} mIoU={:.4f}'.format(pa, mpa, miou))
-    for c in range(NUM_CLASSES):
-        logging.info('test | class=#{} PA={:.4f} IoU={:.4f}'.format(c, pas[c], ious[c]))
+
+            test_bar.set_postfix({
+                'PA': f'{metric.PA():.4f}',
+                'mPA': f'{metric.mPA():.4f}',
+                'mIoU': f'{metric.mIoU():.4f}',
+                'P': ','.join([f'{p:.4f}' for p in metric.Ps()]),
+                'R': ','.join([f'{r:.4f}' for r in metric.Rs()]),
+                'IoU': ','.join([f'{iou:.4f}' for iou in metric.IoUs()]),
+            })
 
 
 if __name__ == '__main__':
