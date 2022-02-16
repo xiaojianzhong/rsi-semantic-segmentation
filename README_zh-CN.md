@@ -22,7 +22,8 @@
 rsi-semantic-segmentation
   |---- configs
   |       |---- __init__.py
-  |       |---- massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml
+  |       |---- gf2-building_deeplabv3-resnet50_ce_adam_plateau_8_0.001_40.yaml
+  |       |---- massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml
   |
   |---- criterions
   |       |---- __init__.py
@@ -33,8 +34,8 @@ rsi-semantic-segmentation
   |---- datas
   |       |---- __init__.py
   |       |---- base.py
+  |       |---- gf2_building.py
   |       |---- massachusetts_building.py
-  |       |---- patch.py
   |       |---- transform.py
   |
   |---- models
@@ -61,6 +62,11 @@ rsi-semantic-segmentation
   |
   |---- schedulers
   |       |---- __init__.py
+  |
+  |---- tools
+  |       |---- datasets
+  |               |---- massachusetts_building
+  |                       |---- patch.py
   |
   |---- .gitignore
   |---- inference.py
@@ -93,10 +99,10 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 
 ## <a name="configurations"></a> 配置
 
-| dataset                  | method               | criterion      | optimizer | scheduler | batch size | LR    | epochs | config                                                                                                |
-|:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
-| `gf2-building`           | `deeplabv3+resnet50` | `softmax+ce`   | `adam`    | `plateau` | 8          | 0.001 | 10     | [config](configs/gf2-building_deeplabv3+resnet50_softmax+ce_adam_plateau_8_0.001_10.yaml)             |
-| `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
+| dataset                  | method               | criterion | optimizer | scheduler | batch size | LR    | epochs | config                                                                                        |
+|:------------------------:|:--------------------:|:---------:|:---------:|:---------:|:----------:|:-----:|:------:|:--------------------------------------------------------------------------------------------:|
+| `gf2-building`           | `deeplabv3-resnet50` | `ce`      | `adam`    | `plateau` | 8          | 0.001 | 10     | [config](configs/gf2-building_deeplabv3-resnet50_ce_adam_plateau_8_0.001_10.yaml)             |
+| `massachusetts-building` | `deeplabv3-resnet50` | `dice`    | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml) |
 
 ### <a name="configuration-name-format"></a> 配置文件名格式
 
@@ -115,6 +121,7 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 
 ## <a name="supported-datasets"></a> 支持的数据集
 
+- [x] [GF2 Building](datas/gf2_building.py)
 - [x] [Massachusetts Building](datas/massachusetts_building.py)
 
 ## <a name="supported-models"></a> 支持的模型
@@ -126,18 +133,32 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 ### <a name="train"></a> 训练
 
 ```shell
-$ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
+$ python train.py configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml \
                   --checkpoint ./best.pth \
-                  --device cuda:0 \
                   --path ./runs/20211206-201700/ \
-                  --no-validate
+                  --no-validate \
+                  --nodes 1 \
+                  --gpus 1 \
+                  --rank-node 0 \
+                  --backend nccl \
+                  --master-ip localhost \
+                  --master-port 8888 \
+                  --seed 42 \
+                  --opt-level O0
 ```
 
 - `config` 指定所使用的配置文件，不可省略
 - `--checkpoint` 指定要加载的保存点，默认从零开始进行训练
-- `--device` 指定训练时要使用的设备，可以是 CPU 或 GPU，默认为 0 卡
 - `--path` 指定实验日志文件要存放到的路径，默认为一个以当前时间为名称的路径
 - `--no-validate` 指定在训练过程中是否不在验证集上进行验证，默认进行验证
+- `-n` / `--nodes` 指定节点数 / 机器数，在单机上训练时应该为 `1`，默认为 `1`
+- `-g` / `--gpus` 指定每个节点 / 机器上的 GPU 数，默认为 `1`
+- `-r` / `--rank-node` 指定当前节点 / 机器的序号，其值应该在 `0` 到 `nodes-1` 之间，默认为 `0`
+- `--backend` 指定 PyTorch 分布式训练所使用的后端，默认为 `nccl`
+- `--master-ip` 指定主节点 / 主机器的网络 IP 地址，默认为 `localhost`
+- `--master-port` 指定主节点 / 主机器的主进程的网络端口，默认为 `8888`
+- `--seed` 指定随机数种子，默认为 `42`
+- `--opt-level` 指定 `nvidia/apex` 的优化等级，默认为 `O0`
 
 ### <a name="test"></a> 测试
 
