@@ -117,6 +117,7 @@ def worker(rank_gpu, args):
     model.to(device)
     # build criterion
     criterion = build_criterion()
+    criterion.to(device)
     # build metric
     metric = Metric(NUM_CLASSES)
     # build optimizer
