@@ -48,7 +48,7 @@ def main():
     CFG.merge_from_file(args.config)
 
     # build transform
-    transform = build_transform()
+    transform = build_transform('test')
     # build dataset
     test_dataset = build_dataset('test')
     NUM_CLASSES = test_dataset.num_classes
