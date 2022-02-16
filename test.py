@@ -70,12 +70,8 @@ def main():
             x, label = x.to(args.device), label.to(args.device)
             y = model(x)
 
-            if NUM_CLASSES > 2:
-                pred = y.data.cpu().numpy().argmax(axis=1)
-            else:
-                pred = (y.data.cpu().numpy() > 0.5).squeeze(1)
-            label = label.data.cpu().numpy()
-            metric.add(pred, label)
+            pred = y.argmax(axis=1)
+            metric.add(pred.data.cpu().numpy(), label.data.cpu().numpy())
     pa, pas, mpa, ious, miou = metric.PA(), metric.PAs(), metric.mPA(), metric.IoUs(), metric.mIoU()
     logging.info('test | PA={:.4f} mPA={:.4f} mIoU={:.4f}'.format(pa, mpa, miou))
     for c in range(NUM_CLASSES):
