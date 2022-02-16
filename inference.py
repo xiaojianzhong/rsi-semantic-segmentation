@@ -51,9 +51,10 @@ def main():
     transform = build_transform('test')
     # build dataset
     test_dataset = build_dataset('test')
+    NUM_CHANNELS = test_dataset.num_channels
     NUM_CLASSES = test_dataset.num_classes
     # build model
-    model = build_model(NUM_CLASSES)
+    model = build_model(NUM_CHANNELS, NUM_CLASSES)
     model.to(args.device)
 
     # load checkpoint
