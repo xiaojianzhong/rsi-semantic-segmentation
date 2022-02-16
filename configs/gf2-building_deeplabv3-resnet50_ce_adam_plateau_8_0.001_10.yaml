@@ -22,7 +22,7 @@ MODEL:
         NAME: 'resnet50'
 
 CRITERION:
-    NAME: 'softmax+ce'
+    NAME: 'ce'
 
 OPTIMIZER:
     NAME: 'adam'

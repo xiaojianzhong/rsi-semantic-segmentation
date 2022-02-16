@@ -20,7 +20,7 @@ MODEL:
         NAME: 'resnet50'
 
 CRITERION:
-    NAME: 'sigmoid+dice'
+    NAME: 'dice'
 
 OPTIMIZER:
     NAME: 'adam'

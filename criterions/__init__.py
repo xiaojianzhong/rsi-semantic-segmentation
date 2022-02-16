@@ -1,3 +1,5 @@
+import segmentation_models_pytorch as smp
+
 from configs import CFG
 from .bce import BCELoss, SigmoidBCELoss
 from .ce import CELoss, SoftmaxCELoss
@@ -6,17 +8,11 @@ from .dice import DiceLoss, SigmoidDiceLoss
 
 def build_criterion():
     if CFG.CRITERION.NAME == 'ce':
-        criterion = CELoss()
-    elif CFG.CRITERION.NAME == 'softmax+ce':
-        criterion = SoftmaxCELoss()
+        criterion = smp.losses.SoftCrossEntropyLoss()
     elif CFG.CRITERION.NAME == 'bce':
-        criterion = BCELoss()
-    elif CFG.CRITERION.NAME == 'sigmoid+bce':
-        criterion = SigmoidBCELoss()
+        criterion = smp.losses.SoftBCEWithLogitsLoss()
     elif CFG.CRITERION.NAME == 'dice':
-        criterion = DiceLoss()
-    elif CFG.CRITERION.NAME == 'sigmoid+dice':
-        criterion = SigmoidDiceLoss()
+        criterion = smp.losses.DiceLoss('multiclass', from_logits=True)
     else:
         raise NotImplementedError('invalid criterion: {}'.format(CFG.CRITERION.NAME))
     return criterion
