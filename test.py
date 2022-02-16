@@ -66,7 +66,7 @@ def main():
     metric.reset()  # reset metric
     test_bar = tqdm(test_dataloader, desc='testing', ascii=True)
     with torch.no_grad():  # disable gradient back-propagation
-        for batch, (x, label) in enumerate(test_bar):
+        for x, label in test_bar:
             x, label = x.to(args.device), label.to(args.device)
             y = model(x)
 
