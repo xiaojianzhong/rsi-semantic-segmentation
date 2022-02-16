@@ -22,7 +22,7 @@ Read this in other languages: English | [简体中文](README_zh-CN.md)
 rsi-semantic-segmentation
   |---- configs
   |       |---- __init__.py
-  |       |---- massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml
+  |       |---- massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml
   |
   |---- criterions
   |       |---- __init__.py
@@ -93,10 +93,10 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 
 ## <a name="configurations"></a> Configurations
 
-| dataset                  | method               | criterion      | optimizer | scheduler | batch size | LR    | epochs | config                                                                                                |
-|:------------------------:|:--------------------:|:--------------:|:---------:|:---------:|:----------:|:-----:|:------:|:-----------------------------------------------------------------------------------------------------:|
-| `gf2-building`           | `deeplabv3+resnet50` | `softmax+ce`   | `adam`    | `plateau` | 8          | 0.001 | 10     | [config](configs/gf2-building_deeplabv3+resnet50_softmax+ce_adam_plateau_8_0.001_10.yaml)             |
-| `massachusetts-building` | `deeplabv3+resnet50` | `sigmoid+dice` | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml) |
+| dataset                  | method               | criterion | optimizer | scheduler | batch size | LR    | epochs | config                                                                                        |
+|:------------------------:|:--------------------:|:---------:|:---------:|:---------:|:----------:|:-----:|:------:|:--------------------------------------------------------------------------------------------:|
+| `gf2-building`           | `deeplabv3-resnet50` | `ce`      | `adam`    | `plateau` | 8          | 0.001 | 10     | [config](configs/gf2-building_deeplabv3-resnet50_ce_adam_plateau_8_0.001_10.yaml)             |
+| `massachusetts-building` | `deeplabv3-resnet50` | `dice`    | `adam`    | `plateau` | 8          | 0.001 | 40     | [config](configs/massachusetts-building_deeplabv3-resnet50_dice_adam_plateau_8_0.001_40.yaml) |
 
 ### <a name="configuration-name-format"></a> Configuration Name Format
 
