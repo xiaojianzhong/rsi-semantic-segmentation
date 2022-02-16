@@ -156,7 +156,7 @@ $ python train.py configs/massachusetts-building_deeplabv3-resnet50_dice_adam_pl
 - `-r` / `--rank-node`: Ranking of the current node / machine, should be in range of `0` ~ `nodes-1`. Default: `0`.
 - `--backend`: Backend for PyTorch DDP. Default: `nccl`.
 - `--master-ip`: Network IP of the master node / machine. Default: `localhost`.
-- `--master-port`: Network port of the master port on the master node / machine. Default: `8888`.
+- `--master-port`: Network port of the master process on the master node / machine. Default: `8888`.
 - `--seed`: Random seed. Default: `42`.
 - `--opt-level`: Optimizing level for `nvidia/apex`. Default: `O0`.
 
