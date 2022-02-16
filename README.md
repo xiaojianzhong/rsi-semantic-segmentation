@@ -129,16 +129,30 @@ $ pip install numpy pandas scikit-image tensorboardX timm torch torchvision tqdm
 ```shell
 $ python train.py configs/massachusetts-building_deeplabv3+resnet50_sigmoid+dice_adam_plateau_8_0.001_40.yaml \
                   --checkpoint ./best.pth \
-                  --device cuda:0 \
                   --path ./runs/20211206-201700/ \
-                  --no-validate
+                  --no-validate \
+                  --nodes 1 \
+                  --gpus 1 \
+                  --rank-node 0 \
+                  --backend nccl \
+                  --master-ip localhost \
+                  --master-port 8888 \
+                  --seed 42 \
+                  --opt-level O0
 ```
 
 - `config`: Configuration to be used, which must be specified.
 - `--checkpoint`: Checkpoint to be loaded. Default: train from scratch.
-- `--device`: Device for training, could be either CPU or GPU. Default: GPU #0.
 - `--path`: Directory to save experiment output files. Default: a directory named by current time.
 - `--no-validate`: Whether not to validate on the validation set during training. Default: do validation.
+- `-n` / `--nodes`: Number of nodes / machines, should be `1` when training on a single machine. Default: `1`.
+- `-g` / `--gpus`: Number of GPUs per node / machine. Default: `1`.
+- `-r` / `--rank-node`: Ranking of the current node / machine, should be in range of `0` ~ `nodes-1`. Default: `0`.
+- `--backend`: Backend for PyTorch DDP. Default: `nccl`.
+- `--master-ip`: Network IP of the master node / machine. Default: `localhost`.
+- `--master-port`: Network port of the master port on the master node / machine. Default: `8888`.
+- `--seed`: Random seed. Default: `42`.
+- `--opt-level`: Optimizing level for `nvidia/apex`. Default: `O0`.
 
 ### <a name="test"></a> Test
 
