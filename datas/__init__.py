@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from configs import CFG
 from .gf2_building import GF2BuildingDataset
 from .massachusetts_building import MassachusettsBuildingDataset
+from .transform import TransformDataset
 
 
 def build_transform(split):
@@ -27,15 +28,12 @@ def build_transform(split):
 def build_dataset(split):
     assert split in ['train', 'val', 'test']
     if CFG.DATASET.NAME == 'gf2-building':
-        dataset = GF2BuildingDataset(CFG.DATASET.ROOT,
-                                     split,
-                                     transform=build_transform(split))
+        dataset = GF2BuildingDataset(CFG.DATASET.ROOT, split)
     elif CFG.DATASET.NAME == 'massachusetts-building':
-        dataset = MassachusettsBuildingDataset(CFG.DATASET.ROOT,
-                                               split,
-                                               transform=build_transform(split))
+        dataset = MassachusettsBuildingDataset(CFG.DATASET.ROOT, split)
     else:
         raise NotImplementedError('invalid dataset: {}'.format(CFG.DATASET.NAME))
+    dataset = TransformDataset(dataset, transform=build_transform(split))
     return dataset
 
 

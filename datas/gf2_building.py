@@ -6,7 +6,7 @@ from .base import Dataset
 
 
 class GF2BuildingDataset(Dataset):
-    def __init__(self, root, split, transform=None):
+    def __init__(self, root, split):
         super(GF2BuildingDataset, self).__init__()
         assert split in ['train', 'val', 'test']
 
@@ -20,8 +20,6 @@ class GF2BuildingDataset(Dataset):
                 self.label_paths.append(label_path)
         assert len(self.image_paths) == len(self.label_paths)
 
-        self.transform = transform
-
     def __len__(self):
         return len(self.image_paths)
 
@@ -30,11 +28,6 @@ class GF2BuildingDataset(Dataset):
 
         image = np.load(image_path).transpose((1, 2, 0))
         label = np.load(label_path).argmax(axis=0)
-
-        if self.transform is not None:
-            transformed = self.transform(image=image, mask=label)
-            image = transformed['image']
-            label = transformed['mask']
 
         return image, label
 
