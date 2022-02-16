@@ -75,10 +75,8 @@ def main():
 
     y = model(x)
 
-    if NUM_CLASSES > 2:
-        pred = y.data.cpu().numpy().argmax(axis=1)
-    else:
-        pred = (y.data.cpu().numpy() > 0.5).squeeze(1)
+    pred = y.argmax(axis=1)
+    pred = pred.data.cpu().numpy()
     pred = pred.squeeze(axis=0)
     pred = pred.astype(np.uint8)
     for label in test_dataset.labels:
